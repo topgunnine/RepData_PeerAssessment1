@@ -1,3 +1,6 @@
+---
+output: html_document
+---
 
 1. Loading and pre-processing the data
 ======================================
