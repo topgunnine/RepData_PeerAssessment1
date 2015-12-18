@@ -1,25 +1,112 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+
+1. Loading and pre-processing the data
+======================================
+
+```{r readData, echo=TRUE}
+fileName <- paste(getwd(),"/","repdata-data-activity","/","activity.csv",sep="")
+
+activity <- read.csv(file = fileName, header=T)
+
+str(activity)
+ncount <- nrow(activity)
+```
+The no. of observations is `r ncount`.
+
+2. What is mean total number of steps taken per day?
+====================================================
+
+```{r meanMedian, echo=TRUE}
+library(sqldf)
+options(scipen=999)
+summaryData <- sqldf("SELECT activity.date, SUM(activity.steps) AS TOTAL_STEPS FROM activity GROUP BY activity.date")
+summaryData
+TOTAL_STEPS <- as.numeric(summaryData$TOTAL_STEPS)
+mean <- mean(TOTAL_STEPS, na.rm=TRUE)
+median <- median(TOTAL_STEPS,na.rm=TRUE)
+```
 
 
-## Loading and preprocessing the data
+Drawing a histogram depicting frequency distribution of no. of steps for the entire duration
+
+```{r histogram, echo=TRUE}
+summaryData$TOTAL_STEPS[is.na(summaryData$TOTAL_STEPS)] = 0
+numStepsVsDates <- rep(summaryData$date,summaryData$TOTAL_STEPS)
+hist(as.Date(numStepsVsDates),format="%d %b %y",breaks="days",xlab="Date",ylab="No. of steps",freq=TRUE)
+
+```
+
+Mean is `r mean` and Median is `r median`.
+
+3. What is the average daily activity pattern?
+==============================================
+
+```{r timeseries, echo=TRUE}
+avgSummaryData <- sqldf("SELECT activity.date, AVG(activity.steps) AS AVG_STEPS FROM activity GROUP BY activity.date")
+avgSummaryData$AVG_STEPS <- as.numeric(avgSummaryData$AVG_STEPS)
+avgSummaryData$AVG_STEPS <- round(avgSummaryData$AVG_STEPS,0)
+avgSummaryData$AVG_STEPS[is.na(avgSummaryData$AVG_STEPS)] = 0
+str(avgSummaryData)
+head(avgSummaryData,2)
+plot(avgSummaryData$date,avgSummaryData$AVG_STEPS,type="l",xlab="date",ylab="Average no. of steps per day")
+
+maxNumStepsDay <- avgSummaryData$date[which.max(avgSummaryData$AVG_STEPS)]
+
+```
+
+Day, which has maximum no. of average steps,  is `r maxNumStepsDay`.
 
 
+4. Inputing missing values
+===========================
 
-## What is mean total number of steps taken per day?
+```{r missingValueCount, echo=TRUE}
+NAMissingCount = sum(is.na(activity$steps))
 
+```
 
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
+No. of missing values in the dataset is `r NAMissingCount`.
 
 
-## Are there differences in activity patterns between weekdays and weekends?
+```{r missingValueTreatment, echo=TRUE}
+#i <- 1
+#for(i in 1:nrow(activity)){
+ # missingValue <- activity$date[i]
+ # activity$steps[is.na(activity$steps)] =     
+   # avgSummaryData$AVG_STEPS[avgSummaryData$date==missingValue]
+#print(missingValue)
+#i <- i+1
+#}
+
+activity$steps2 <- activity$steps
+ind <- is.na(activity$steps2) #find where missing values are
+missingDates <- activity$date[ind] #find to what dates the missing values belong to
+
+activity$steps2[ind] <- avgSummaryData$AVG_STEPS[missingDates] #substitute the missing values with average values of no. of steps for that date
+
+
+```
+
+Changed the missing values to average no. of steps for that day
+
+```{r histogramTreatedData, echo=TRUE}
+
+hisogramData <- sqldf("SELECT activity.date, SUM(activity.steps2) AS TOTAL_STEPS FROM activity GROUP BY activity.date")
+
+histStepsVsDates <- rep(hisogramData$date,hisogramData$TOTAL_STEPS)
+hist(as.Date(histStepsVsDates),format="%d %b %y",breaks="days",xlab="Date",ylab="No. of steps",freq=TRUE)
+
+TOTAL_STEPS <- as.numeric(hisogramData$TOTAL_STEPS)
+mean <- mean(TOTAL_STEPS, na.rm=TRUE)
+median <- median(TOTAL_STEPS,na.rm=TRUE)
+```
+
+New values for Mean is `r mean` and Median is `r median`.
+Both mean and median values have reduced after this treatment.
+
+
+5.Are there differences in activity patterns between weekdays and weekends?
+============================================================================
+
+```{r weekendWeekday, echo=TRUE}
+#dataWeekend <- 
+```
