@@ -111,5 +111,28 @@ Both mean and median values have reduced after this treatment.
 ============================================================================
 
 ```{r weekendWeekday, echo=TRUE}
-#dataWeekend <- 
+#creating factor (weekend/weekday) variable
+activity$days <- weekdays(as.Date(activity$date))
+
+i<- 1
+for(i in 1:nrow(activity)){
+if(activity$days[i] %in% c("Monday","Tuesday","Wednesday","Thursday","Friday"))
+  activity$dayType[i] <- "Weekday"
+else activity$dayType[i] <- "Weekend"
+i <- i+1
+}
+activity$dayType <- as.factor(activity$dayType)
+
+avgWeekDayEndSummaryData <- sqldf("SELECT activity.interval, activity.dayType,AVG(activity.steps) AS AVG_STEPS FROM activity GROUP BY  activity.interval, activity.dayType")
+
+avgWeekDayEndSummaryData$AVG_STEPS <- round(avgWeekDayEndSummaryData$AVG_STEPS,0)
+
+#avgWeekDayEndSummaryData
+
+#creating panel plot
+
+library(lattice)
+
+bwplot(avgWeekDayEndSummaryData$AVG_STEPS~avgWeekDayEndSummaryData$interval|avgWeekDayEndSummaryData$dayType,type="l",ylab="Number of steps",xlab="Interval",main="Activity by weekday/weekend",layout=c(1,2))
+
 ```
